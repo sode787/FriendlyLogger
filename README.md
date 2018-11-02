@@ -1,2 +1,2 @@
 # FriendlyLogger
-Python Key Logger
+Python Keylogger

